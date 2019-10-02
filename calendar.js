@@ -13,6 +13,12 @@ var dateRef  = process.argv[2];
 var dateEnd  = process.argv[3];
 var viewJson = process.argv[4];
 
+// process.argv[2] ='2019-09-01';
+// process.argv[3] ='2019-10-01';
+
+// dateRef=process.argv[2];
+// dateEnd=process.argv[3];
+
 if ((process.argv[2] === undefined) || (process.argv[3] === undefined)) {
     console.log("Please specify the parameters of inicial and final date: \nnode calendar.js yyyy-mm-dd yyy-mm-dd \nor\nnode calendar.js yyyy-mm-dd yyy-mm-dd json");
     return;
@@ -83,7 +89,8 @@ function daysBetween(startDate, endDate) {
 
 function treatAsUTC(date) {
     var result = new Date(date);
-    result.setMinutes(result.getMinutes() - result.getTimezoneOffset());
+    //result.setMinutes(result.getMinutes() - result.getTimezoneOffset());
+    result.setMinutes(result.getMinutes() - result.getTimezoneOffset() );
     return result;
 }
 
@@ -116,6 +123,23 @@ function saveLog(text) {
         console.log('successfully appended "' + text + '"');
     });
 }
+function addDays(myDate,days) {
+return new Date(myDate.getTime() + days*24*60*60*1000);
+}
+
+function formatDate(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+
+    return [year, month, day].join('-');
+}
 
 function getEvents(time, datasent, callback) {
     request("https://www.forexfactory.com/calendar.php?day=" + time, function(error, response, html) {
@@ -135,8 +159,30 @@ function getEvents(time, datasent, callback) {
                     calendar_time = convertTo24Hour(data.find('.calendar__time').text());
                     time = convertTo24Hour(data.find('.calendar__time').text());
                 }
+				
+				var hhmm= time.split(":");
+				var hh= parseInt(hhmm[0])+5;
+				
+				
+				if(hh>23)
+				{
+					//calendar_date=calendar_date+1;////////////////////////
+					var myDate = new Date(calendar_date);
+					var newDate = addDays(myDate,1);
+					calendar_date=formatDate(newDate);
+					hh=hh-24;
+				}
+				calendar_time="00";
+				calendar_time=calendar_time.concat(hh,":",hhmm[1]);
+				calendar_time=calendar_time.substr(calendar_time.length - 5);
+
+				
 
                 var currency = data.find('.calendar__currency').text();
+                if (currency != "")
+                {
+                    var impact = (data.find('.calendar__impact')[0]['attribs']['class']).replace("calendar__cell calendar__impact impact calendar__impact calendar__impact--","");
+                }
                 var title = trim_space(data.find('.calendar__event').text());
                 var actual = data.find('.calendar__actual').text();
                 var forecast = data.find('.calendar__forecast').text();
@@ -145,7 +191,7 @@ function getEvents(time, datasent, callback) {
 
 		if (process.argv[4] === undefined) {
 		    if (currency.length > 2) {
-                    	insert = "INSERT INTO calendar (\"date\",\"time\",\"symbol\",\"title\",\"actual\",\"forecast\",\"previous\") VALUES (\"" + calendar_date + "\", \"" + calendar_time + "\", \"" + currency + "\", \"" + title + "\", \"" + actual + "\", \"" + forecast + "\", \"" + previous + "\" )\n";
+                    	insert = "INSERT INTO calendar (\"date\",\"time\",\"symbol\",\"impact\",\"title\",\"actual\",\"forecast\",\"previous\") VALUES (\"" + calendar_date + "\", \"" + calendar_time + "\", \"" + currency + "\", \"" + impact + "\", \"" + title + "\", \"" + actual + "\", \"" + forecast + "\", \"" + previous + "\" )\n";
                    	saveLog(insert);
 		   }	
 		}else{
