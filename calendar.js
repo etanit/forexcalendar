@@ -178,7 +178,7 @@ function getEvents(time, datasent, callback) {
 
 				
 
-                var currency = data.find('.calendar__currency').text();
+                var currency = data.find('.calendar__currency').text().replace(/\n/g, '');
                 if (currency != "")
                 {
                     var impact = (data.find('.calendar__impact')[0]['attribs']['class']).replace("calendar__cell calendar__impact impact calendar__impact calendar__impact--","");
@@ -190,8 +190,8 @@ function getEvents(time, datasent, callback) {
                 var calendar_date = datasent;
 
 		if (process.argv[4] === undefined) {
-		    if (currency.length > 2) {
-                    	insert = "INSERT INTO calendar (\"date\",\"time\",\"symbol\",\"impact\",\"title\",\"actual\",\"forecast\",\"previous\") VALUES (\"" + calendar_date + "\", \"" + calendar_time + "\", \"" + currency + "\", \"" + impact + "\", \"" + title + "\", \"" + actual + "\", \"" + forecast + "\", \"" + previous + "\" )\n";
+		    if (currency.length > 2) {                 
+                        insert = "INSERT INTO calendar (date,time,symbol,impact,title,actual,forecast,previous) VALUES ('" + calendar_date + "', '" + calendar_time + "', '" + currency + "', '" + impact + "', '" + title + "', '" + actual + "', '" + forecast + "', '" + previous + "' )\n";
                    	saveLog(insert);
 		   }	
 		}else{
@@ -199,6 +199,7 @@ function getEvents(time, datasent, callback) {
                        date: calendar_date,
                        time: calendar_time,
                        symbol: currency,
+                       level: impact,
                        title: title,
                        actual: actual,
                        forecast: forecast,
